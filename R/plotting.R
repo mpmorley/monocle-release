@@ -24,7 +24,8 @@ monocle_theme_opts <- function()
 #' @param show_backbone whether to show the diameter path of the MST used to order the cells
 #' @param backbone_color the color used to render the backbone.
 #' @param markers a gene name or gene id to use for setting the size of each cell in the plot
-#' @param use_color_gradient Whether or not to use color gradient instead of cell size to show marker expression level 
+#' @param use_color_gradient Whether or not to use color gradient instead of cell size to show marker expression level
+#' @param color_gradient Single color to use to create the gradient.
 #' @param markers_linear a boolean used to indicate whether you want to scale the markers logarithimically or linearly
 #' @param show_cell_names draw the name of each cell in the plot
 #' @param show_state_number show state number
@@ -57,6 +58,7 @@ plot_cell_trajectory <- function(cds,
                                backbone_color="black", 
                                markers=NULL, 
                                use_color_gradient = FALSE,
+                               color_gradient='midnightblue',
                                markers_linear = FALSE,
                                show_cell_names=FALSE,
                                show_state_number = FALSE,
@@ -148,13 +150,14 @@ plot_cell_trajectory <- function(cds,
   }
   if (is.null(markers_exprs) == FALSE && nrow(markers_exprs) > 0){
     data_df <- merge(data_df, markers_exprs, by.x="sample_name", by.y="cell_id")
+    data_df <- data_df %>% dplyr::arrange(value)
     if(use_color_gradient) {
       if(markers_linear){
         g <- ggplot(data=data_df, aes(x=data_dim_1, y=data_dim_2)) + geom_point(aes(color= value), size=I(cell_size), na.rm = TRUE) + 
-          scale_color_viridis(name = paste0("value"), ...) + facet_wrap(~feature_label)
+          scale_color_gradient(low = "grey", high = color_gradient,name = paste0("value"), ...) + facet_wrap(~feature_label)
         } else {
           g <- ggplot(data=data_df, aes(x=data_dim_1, y=data_dim_2)) + geom_point(aes(color=log10(value + 0.1)), size=I(cell_size), na.rm = TRUE) + 
-              scale_color_viridis(name = paste0("log10(value + 0.1)"), ...) + facet_wrap(~feature_label)
+              scale_color_gradient(low = "grey", high = color_gradient, name = paste0("log10(value + 0.1)"), ...) + facet_wrap(~feature_label)
         }
 
     } else {
@@ -1940,7 +1943,8 @@ plot_ordering_genes <- function(cds){
 plot_cell_clusters <- function(cds, 
                                x=1, 
                                y=2, 
-                               color_by="Cluster", 
+                               color_by="Cluster",
+                               color_gradient='midnightblue',
                                markers=NULL, 
                                show_cell_names=FALSE, 
                                cell_size=1.5,
@@ -2000,7 +2004,7 @@ plot_cell_clusters <- function(cds,
   }
   if (is.null(markers_exprs) == FALSE && nrow(markers_exprs) > 0){
     data_df <- merge(data_df, markers_exprs, by.x="sample_name", by.y="cell_id")
-
+    data_df <- data_df %>% dplyr::arrange(value)
     g <- ggplot(data=data_df, aes(x=data_dim_1, y=data_dim_2)) + facet_wrap(~feature_label) 
   }else{
     g <- ggplot(data=data_df, aes(x=data_dim_1, y=data_dim_2)) 
@@ -2010,7 +2014,7 @@ plot_cell_clusters <- function(cds,
   # Don't do it!
   if (is.null(markers_exprs) == FALSE && nrow(markers_exprs) > 0){
     g <- g + geom_point(aes(color=log10(value + 0.1)), size=I(cell_size), na.rm = TRUE) + 
-      scale_color_viridis(name = paste0("log10(value + 0.1)"), ...)
+      scale_colour_gradient(low = "grey", high = color_gradient,name = paste0("log10(value + 0.1)"), ...)
   }else {
     g <- g + geom_point(aes_string(color = color_by), size=I(cell_size), na.rm = TRUE)
   }
